@@ -42,61 +42,61 @@ class Ball(GameObject):
             self.velocity.y = 0
 
         self.rect.x += self.velocity.x  # type: ignore
-        # self.fix_position(tiles, "x")
+        x_col = self.fix_position(tiles, "x")[0]
 
         self.rect.y += int(self.velocity.y)
+        y_col = self.fix_position(tiles, "y")[1]
 
-        _, y_ground_col = self.move_in_bounds()
-
-        # tile_collision = self.fix_position(tiles, "y")
-        tile_collision = False
-
-        if not y_ground_col and not tile_collision:
+        if not y_col:
             self.grounded = False
-        elif tile_collision or y_ground_col:
+        else:
             self.grounded = True
             self.velocity.y = -abs(self.velocity.y)
             self.can_jump = True
 
-    def move_in_bounds(self) -> tuple[int, int]:
-        res = [False, False]
-
-        if self.rect.x <= 0 or self.rect.right >= WIDTH:
-            self.velocity.x *= -0.4
-            self.rect.x = clamp(self.rect.x, 0, WIDTH - self.rect.width)  # type: ignore
-            res[0] = True
-
-        if self.rect.bottom >= HEIGHT - 1:
-            self.rect.y = HEIGHT - self.rect.height
-            self.velocity.y *= -0.4
-
-            res[1] = True
-
-        return tuple(res)
-
     def fix_position(
         self, tiles: list[GameObject], axis: Literal["x"] | Literal["y"]
-    ) -> bool:
+    ) -> tuple[bool, bool]:
+        tiles = [
+            *tiles,
+            GameObject(pygame.Rect(0, 0, WIDTH, 1)),
+            GameObject(pygame.Rect(-30, 0, 30, HEIGHT)),
+            GameObject(pygame.Rect(0, HEIGHT, WIDTH, 30)),
+            GameObject(pygame.Rect(WIDTH, 0, 30, HEIGHT + 30)),
+        ]
+
         collisions = [tile for tile in tiles if tile.rect.colliderect(self.rect)]
 
-        is_grounded = False
+        collision_occured = [False, False]
 
         if axis == "x":
             for tile in collisions:
+                collision = self.velocity.x != 0
+
                 if self.velocity.x < 0:
                     self.rect.left = tile.rect.right
+
                 elif self.velocity.x > 0:
                     self.rect.right = tile.rect.left
 
+                if collision:
+                    self.velocity.x *= -0.4
+                    collision_occured[0] = True
+
         elif axis == "y":
             for tile in collisions:
+                collision = self.velocity.y != 0
+
                 if self.velocity.y < 0:
                     self.rect.top = tile.rect.bottom
                 elif self.velocity.y > 0:
                     self.rect.bottom = tile.rect.top
-                    is_grounded = True
 
-        return is_grounded
+                if collision:
+                    self.velocity.y *= -0.4
+                    collision_occured[1] = True
+
+        return tuple(collision_occured)
 
     def on_mouse_down(self) -> None:
         self._start_click_pos = pygame.Vector2(pygame.mouse.get_pos())
