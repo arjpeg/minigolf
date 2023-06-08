@@ -31,17 +31,9 @@ class Ball(GameObject):
         self.velocity.x *= FRICTION_FACTOR
         self.velocity.y += GRAVITY if not self.grounded else 0
 
-        print(
-            "init",
-            f"{self.grounded=} (added {GRAVITY if not self.grounded else 0})",
-            f"{self.velocity=}",
-        )
-
         # Don't let the velocity get too high
         self.velocity.x = clamp(self.velocity.x, -40, 40)
         self.velocity.y = clamp(self.velocity.y, -50, 40)
-
-        print("after boundary check", f"{self.grounded=}", f"{self.velocity=}")
 
         if abs(self.velocity.x) < 0.1:
             self.velocity.x = 0
@@ -59,16 +51,12 @@ class Ball(GameObject):
         # tile_collision = self.fix_position(tiles, "y")
         tile_collision = False
 
-        print(y_ground_col, tile_collision)
-
         if not y_ground_col and not tile_collision:
             self.grounded = False
         elif tile_collision or y_ground_col:
             self.grounded = True
             self.velocity.y = -abs(self.velocity.y)
             self.can_jump = True
-
-        print(self.velocity, "\n")
 
     def move_in_bounds(self) -> tuple[int, int]:
         res = [False, False]
@@ -81,14 +69,8 @@ class Ball(GameObject):
         if self.rect.bottom >= HEIGHT - 1:
             self.rect.y = HEIGHT - self.rect.height
             self.velocity.y *= -0.4
-            print(f"reduce velocity by * 0.4 (now: {self.velocity.y=})")
 
             res[1] = True
-
-        print(
-            "in boundary check",
-            f"{self.velocity=}, {self.rect.bottom} >= {HEIGHT}",
-        )
 
         return tuple(res)
 
@@ -144,13 +126,6 @@ class Ball(GameObject):
 
         self.velocity.x += math.cos(math.radians(angle)) * magnitude / 10
         self.velocity.y += math.sin(math.radians(angle)) * -magnitude / 7
-
-        print(
-            "after mouse up\n",
-            f"{self.velocity=}",
-            f"{magnitude=}",
-            f"{angle=}",
-        )
 
         self._start_click_pos = pygame.Vector2(0, 0)
         self.can_jump = False
